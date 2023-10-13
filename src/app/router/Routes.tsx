@@ -7,6 +7,7 @@ import { ContactPage } from "@mui/icons-material";
 import AboutPage from "../features/about/AboutPage";
 import ErrorPage from "../features/error/ErrorPage";
 import BasketPage from "../features/basket/BasketPage";
+import CheckoutPage from "../features/checkout/CheckoutPage";
 
 export const router = createBrowserRouter([
   {
@@ -20,6 +21,7 @@ export const router = createBrowserRouter([
       { path: "contact", element: <ContactPage /> },
       { path: "not-found", element: <ErrorPage /> },
       { path: "basket", element: <BasketPage /> },
+      { path: "checkout", element: <CheckoutPage /> },
       { path: "*", element: <Navigate replace to="not-found" /> },
     ],
   },

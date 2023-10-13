@@ -8,7 +8,7 @@ import "@fontsource/roboto/500.css";
 import "@fontsource/roboto/700.css";
 import { RouterProvider } from "react-router-dom";
 import { router } from "./app/router/Routes";
-import { StoreContext, StoreProvider } from "./app/context/StoreContext";
+import { StoreProvider } from "./app/context/StoreContext";
 
 const root = ReactDOM.createRoot(
   document.getElementById("root") as HTMLElement

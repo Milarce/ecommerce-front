@@ -14,6 +14,7 @@ import {
 } from "@mui/material";
 import { Link, NavLink } from "react-router-dom";
 import { ShoppingCart } from "@mui/icons-material";
+import { useStoreContex } from "../context/StoreContext";
 
 interface Props {
   auth: boolean;
@@ -44,6 +45,9 @@ const navStyles = {
 };
 
 const Header = (props: Props) => {
+  const { basket } = useStoreContex();
+  const itemCount = basket?.items.reduce((sum, item) => sum + item.quantity, 0); //Sums all products and their quantities
+
   return (
     <AppBar position="static" sx={{ mb: 4 }}>
       <Toolbar
@@ -94,7 +98,7 @@ const Header = (props: Props) => {
             color="inherit"
             sx={{ mr: 4 }}
           >
-            <Badge badgeContent="4" color="secondary">
+            <Badge badgeContent={itemCount} color="secondary">
               <ShoppingCart />
             </Badge>
           </IconButton>
