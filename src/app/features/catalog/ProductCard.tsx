@@ -12,29 +12,30 @@ import {
 } from "@mui/material";
 import { Link } from "react-router-dom";
 import { LoadingButton } from "@mui/lab";
-import agent from "../../api/agent";
-import { useStoreContex } from "../../context/StoreContext";
 import { currencyFormat } from "../../util/util";
+import { useAppDispatch, useAppSelector } from "../../context/configureStore";
+import { addBasketItemAsync } from "../basket/basketSlice";
 
 interface Props {
   prod: Product;
 }
 
 const ProductCard = (props: Props) => {
-  const { setBasket } = useStoreContex();
-  const [loading, setLoading] = useState(false);
+  const dispatch = useAppDispatch();
+  const status = useAppSelector((status) => status.basket.status);
 
-  const handleAddItem = async (id: number) => {
+  //Used before of using RTK Query
+  /*   const handleAddItem = async (id: number) => {
     setLoading(true);
     try {
       const resp = await agent.Basket.addItem(id);
-      setBasket(resp);
+      dispatch(setBasket(resp));
     } catch (err) {
       console.log(err);
     } finally {
       setLoading(false);
     }
-  };
+  }; */
 
   return (
     <Card sx={{ maxWidth: 345 }}>
@@ -68,8 +69,10 @@ const ProductCard = (props: Props) => {
       </CardContent>
       <CardActions>
         <LoadingButton
-          loading={loading}
-          onClick={() => handleAddItem(props.prod.id)}
+          loading={status.includes("pending" + props.prod.id)}
+          onClick={() =>
+            dispatch(addBasketItemAsync({ productId: props.prod.id }))
+          }
           size="small"
         >
           Add to cart

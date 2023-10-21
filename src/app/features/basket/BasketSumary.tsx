@@ -5,12 +5,11 @@ import {
   TableBody,
   TableRow,
   TableCell,
-  Typography,
 } from "@mui/material";
-import { useStoreContex } from "../../context/StoreContext";
+import { useAppSelector } from "../../context/configureStore";
 
 export default function BasketSummary() {
-  const { basket } = useStoreContex();
+  const { basket } = useAppSelector((state) => state.basket);
 
   const subtotal =
     basket?.items.reduce(

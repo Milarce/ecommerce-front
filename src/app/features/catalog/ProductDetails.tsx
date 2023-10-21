@@ -15,17 +15,21 @@ import { useParams, useNavigate } from "react-router-dom";
 import { Product } from "../../models/product";
 import agent from "../../api/agent";
 import LoadingComponent from "../../layout/LoadingComponent";
-import { useStoreContex } from "../../context/StoreContext";
 import { LoadingButton } from "@mui/lab";
+import { useAppDispatch, useAppSelector } from "../../context/configureStore";
+import {
+  addBasketItemAsync,
+  removeBasketItemAsync,
+} from "../basket/basketSlice";
 
 const ProductDetails = () => {
-  const { basket, setBasket, removeItem } = useStoreContex();
+  const { basket, status } = useAppSelector((state) => state.basket);
+  const dispatch = useAppDispatch();
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [quantity, setQuantity] = useState(0);
-  const [submitLoad, setSubmitload] = useState(false);
 
   const item = basket?.items.find((i) => i.productId === product?.id); //Verifiy if the product is already in the basket
 
@@ -52,21 +56,27 @@ const ProductDetails = () => {
   };
 
   const handleUpdateCart = async () => {
-    setSubmitload(true);
     try {
       if (!item || quantity > item.quantity) {
         const updatedQuantity = item ? quantity - item.quantity : quantity;
-        const resp = await agent.Basket.addItem(product?.id!, updatedQuantity);
-        setBasket(resp);
+        //const resp = await agent.Basket.addItem(product?.id!, updatedQuantity);
+        dispatch(
+          addBasketItemAsync({
+            productId: product?.id!,
+            quantity: updatedQuantity,
+          })
+        );
       } else {
         const updatedQuantity = item.quantity - quantity;
-        await agent.Basket.removeItem(product?.id!, updatedQuantity);
-        removeItem(product?.id!, updatedQuantity);
+        //await agent.Basket.removeItem(product?.id!, updatedQuantity);
+        dispatch(
+          removeBasketItemAsync({
+            productId: product?.id!,
+            quantity: updatedQuantity,
+          }) //the names of properties inside action.payload are productId and quantity
+        );
       }
-    } catch {
-    } finally {
-      setSubmitload(false);
-    }
+    } catch {}
   };
 
   return (
@@ -128,7 +138,7 @@ const ProductDetails = () => {
               </Grid>
               <Grid item xs={6}>
                 <LoadingButton
-                  loading={submitLoad}
+                  loading={status.includes("pending" + item?.productId)}
                   onClick={handleUpdateCart}
                   sx={{ height: "55px" }}
                   color="primary"

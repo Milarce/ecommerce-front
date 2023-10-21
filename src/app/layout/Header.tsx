@@ -14,7 +14,7 @@ import {
 } from "@mui/material";
 import { Link, NavLink } from "react-router-dom";
 import { ShoppingCart } from "@mui/icons-material";
-import { useStoreContex } from "../context/StoreContext";
+import { useAppSelector } from "../context/configureStore";
 
 interface Props {
   auth: boolean;
@@ -45,7 +45,7 @@ const navStyles = {
 };
 
 const Header = (props: Props) => {
-  const { basket } = useStoreContex();
+  const { basket } = useAppSelector((state) => state.basket);
   const itemCount = basket?.items.reduce((sum, item) => sum + item.quantity, 0); //Sums all products and their quantities
 
   return (
