@@ -1,5 +1,4 @@
 import {
-  CircularProgress,
   Divider,
   Grid,
   Table,
@@ -11,9 +10,7 @@ import {
   Typography,
 } from "@mui/material";
 import React, { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { Product } from "../../models/product";
-import agent from "../../api/agent";
+import { useParams } from "react-router-dom";
 import LoadingComponent from "../../layout/LoadingComponent";
 import { LoadingButton } from "@mui/lab";
 import { useAppDispatch, useAppSelector } from "../../context/configureStore";
@@ -21,33 +18,24 @@ import {
   addBasketItemAsync,
   removeBasketItemAsync,
 } from "../basket/basketSlice";
+import { fetchProductAsync, productSelectors } from "./catalogSlice";
 
 const ProductDetails = () => {
   const { basket, status } = useAppSelector((state) => state.basket);
+  const { status: productStatus } = useAppSelector((state) => state.catalog);
   const dispatch = useAppDispatch();
-  const [product, setProduct] = useState<Product | null>(null);
-  const [loading, setLoading] = useState(true);
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
+  const product = useAppSelector((state) =>
+    productSelectors.selectById(state, parseInt(id!))
+  );
   const [quantity, setQuantity] = useState(0);
 
   const item = basket?.items.find((i) => i.productId === product?.id); //Verifiy if the product is already in the basket
 
   useEffect(() => {
     if (item) setQuantity(item.quantity);
-    getData();
-  }, [id, item]);
-
-  const getData = async () => {
-    try {
-      const response = id && (await agent.Catalog.details(parseInt(id))); //The axios fetch is implemented in agent.ts
-      setProduct(response);
-      setLoading(false);
-    } catch (err: any) {
-      console.error(err.response);
-      navigate("/not-found");
-    }
-  };
+    if (!product && id) dispatch(fetchProductAsync(parseInt(id)));
+  }, [id, item, product, dispatch]);
 
   const handleInputChange = (e: any) => {
     if (e.target.value >= 0) {
@@ -82,7 +70,7 @@ const ProductDetails = () => {
   return (
     <>
       <Typography>Product Details</Typography>
-      {loading ? (
+      {productStatus === "pendingFetchProduct" ? (
         <LoadingComponent message="Loading Product..." />
       ) : (
         <Grid container spacing={6}>
@@ -138,7 +126,7 @@ const ProductDetails = () => {
               </Grid>
               <Grid item xs={6}>
                 <LoadingButton
-                  loading={status.includes("pending" + item?.productId)}
+                  loading={status.includes("pending")}
                   onClick={handleUpdateCart}
                   sx={{ height: "55px" }}
                   color="primary"

@@ -1,32 +1,22 @@
 import React from "react";
-import { useState, useEffect } from "react";
-import { Product } from "../../models/product";
+import { useEffect } from "react";
 import ProductList from "./ProductList";
-import agent from "../../api/agent";
-import LoadingComponet from "../../layout/LoadingComponent";
 import LoadingComponent from "../../layout/LoadingComponent";
+import { useAppDispatch, useAppSelector } from "../../context/configureStore";
+import { fetchProductsAsync, productSelectors } from "./catalogSlice";
 
 const Catalog = () => {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
+  const products = useAppSelector(productSelectors.selectAll);
+  const { productsLoaded, status } = useAppSelector((state) => state.catalog);
+  const dispatch = useAppDispatch();
 
   useEffect(() => {
-    getData();
-  }, []);
-
-  const getData = async () => {
-    try {
-      const productsList = await agent.Catalog.list(); //The axios fetch is implemented in agent.ts
-      setProducts(productsList);
-      setLoading(false);
-    } catch (err) {
-      console.error(err);
-    }
-  };
+    if (!productsLoaded) dispatch(fetchProductsAsync());
+  }, [productsLoaded, dispatch]);
 
   return (
     <>
-      {loading ? (
+      {status === "pendingFetchProducts" ? (
         <LoadingComponent message="Loading Products..." />
       ) : (
         <ProductList products={products} />
