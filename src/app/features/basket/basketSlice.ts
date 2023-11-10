@@ -1,6 +1,7 @@
-import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import { createAsyncThunk, createSlice, isAnyOf } from "@reduxjs/toolkit";
 import { Basket } from "../../models/basket";
 import agent from "../../api/agent";
+import { getCookie } from "../../util/util";
 
 interface BasketState {
   basket: Basket | null;
@@ -11,6 +12,23 @@ const initialState: BasketState = {
   basket: null,
   status: "idle",
 };
+
+export const fetchBasketAsync = createAsyncThunk<Basket>(
+  "basket/fetchBasketAsync",
+  async (_, thunkAPI) => {
+    try {
+      return await agent.Basket.get();
+    } catch (error: any) {
+      return thunkAPI.rejectWithValue({ error: error.data });
+    }
+  },
+  {
+    condition: () => {
+      //the request is launched only if the buyerId cookie is present
+      if (!getCookie("buyerId")) return false;
+    },
+  }
+);
 
 export const addBasketItemAsync = createAsyncThunk<
   //Returns Basket
@@ -43,6 +61,9 @@ export const basketSlice = createSlice({
     setBasket: (state, action) => {
       state.basket = action.payload;
     },
+    clearBasket: (state) => {
+      state.basket = null;
+    },
     /*removeItem: (state, action) => {
       const { productId, quantity } = action.payload; //The reducers receive just one action argument, for that we distructuring payload into productId, quantity
       const itemIndex = state.basket?.items.findIndex(
@@ -55,17 +76,11 @@ export const basketSlice = createSlice({
     }, */
   },
   extraReducers: (builder) => {
+    builder.addCase(fetchBasketAsync.pending, (state) => {
+      state.status = "pendingFetchBasket";
+    });
     builder.addCase(addBasketItemAsync.pending, (state, action) => {
       state.status = "pendingAddItem" + action.meta.arg.productId; //action.payload is undifined because it has a payload just whenever is a fulfilled addCase
-    });
-    builder.addCase(addBasketItemAsync.fulfilled, (state, action) => {
-      console.log(action);
-      state.basket = action.payload;
-      state.status = "idle";
-    });
-    builder.addCase(addBasketItemAsync.rejected, (state, action) => {
-      console.log(action);
-      state.status = "idle";
     });
     builder.addCase(removeBasketItemAsync.pending, (state, action) => {
       state.status = "pendingRemoveItem" + action.meta.arg.productId; //action.payload is undifined because it has a payload just whenever is a fulfilled addCase
@@ -86,7 +101,20 @@ export const basketSlice = createSlice({
       console.log(action);
       state.status = "idle";
     });
+    builder.addMatcher(
+      isAnyOf(fetchBasketAsync.fulfilled, addBasketItemAsync.fulfilled),
+      (state, action) => {
+        state.basket = action.payload;
+        state.status = "idle";
+      }
+    );
+    builder.addMatcher(
+      isAnyOf(fetchBasketAsync.rejected, addBasketItemAsync.rejected),
+      (state) => {
+        state.status = "idle";
+      }
+    );
   },
 });
 
-export const { setBasket } = basketSlice.actions;
+export const { setBasket, clearBasket } = basketSlice.actions;

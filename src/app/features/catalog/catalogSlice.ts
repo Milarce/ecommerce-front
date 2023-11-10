@@ -1,4 +1,5 @@
 import {
+  PayloadAction,
   createAsyncThunk,
   createEntityAdapter,
   createSlice,
@@ -137,7 +138,7 @@ export const catalogSlice = createSlice({
       console.log(action);
       state.status = "idle";
     });
-    //---FETCHING PRODUCT CASES---//
+    //---FETCHING SINGLE PRODUCT CASES---//
     builder.addCase(fetchProductAsync.pending, (state) => {
       state.status = "pendingFetchProduct";
     });

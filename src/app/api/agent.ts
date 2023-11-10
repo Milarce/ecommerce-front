@@ -2,11 +2,19 @@ import axios, { AxiosError, AxiosResponse } from "axios";
 import { toast } from "react-toastify";
 import { router } from "../router/Routes";
 import { PaginatedResponse } from "../models/pagination";
+import { store } from "../context/configureStore";
 
 axios.defaults.baseURL = "http://localhost:5000/api/";
 axios.defaults.withCredentials = true; //Permits get and set cookies by the browser (must be implemented on the server side as well)
 
 const responseBody = (response: AxiosResponse) => response.data;
+
+//Allows the token to be persistent, meaning if the page reloads and if there were a user logged in, the token is sended to the server to check if is valid
+axios.interceptors.request.use((config) => {
+  const token = store.getState().account.user?.token; //If there is a token saved in local storage we have saved it in the state with setUser reducer
+  if (token) config.headers.Authorization = `Bearer ${token}`; //we send the token to the server as an Authorization header only if we have a valid token saved in local storage
+  return config;
+});
 
 axios.interceptors.response.use(
   (resp) => {
@@ -78,10 +86,17 @@ const Basket = {
     requests.delete(`Basket?productId=${id}&quantity=${quantity}`),
 };
 
+const Account = {
+  login: (values: any) => requests.post("account/login", values),
+  register: (values: any) => requests.post("account/register", values),
+  currentUser: () => requests.get("account/currentUser"),
+};
+
 const agent = {
   Catalog,
   TestErrors,
   Basket,
+  Account,
 };
 
 export default agent;

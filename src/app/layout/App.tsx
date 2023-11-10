@@ -1,16 +1,15 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Header from "./Header";
-import { CssBaseline, Container, createTheme, Typography } from "@mui/material";
+import { CssBaseline, Container, createTheme } from "@mui/material";
 import { ThemeProvider } from "@emotion/react";
 import { Outlet } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 //import { useStoreContex } from "../context/StoreContext";
-import { getCookie } from "../util/util";
 import LoadingComponent from "./LoadingComponent";
-import agent from "../api/agent";
 import { useAppDispatch } from "../context/configureStore";
-import { setBasket } from "../features/basket/basketSlice";
+import { fetchBasketAsync } from "../features/basket/basketSlice";
+import { fetchCurrentUser } from "../features/account/accountSlice";
 
 function App() {
   const dispatch = useAppDispatch();
@@ -18,21 +17,19 @@ function App() {
   const [darkMode, setDarkMode] = useState(false);
   const mode = darkMode ? "dark" : "light";
 
-  useEffect(() => {
-    const buyerId = getCookie("buyerId");
-    if (buyerId) {
-      agent.Basket.get()
-        .then((basket) =>
-          basket ? (
-            dispatch(setBasket(basket))
-          ) : (
-            <Typography variant="h3">Your basket empty</Typography>
-          )
-        )
-        .catch((error) => console.error(error))
-        .finally(() => setLoading(false));
+  //useCallbak is used here to avoid going in infinit loop with the useEffect and dispatch
+  const initApp = useCallback(async () => {
+    try {
+      await dispatch(fetchCurrentUser());
+      await dispatch(fetchBasketAsync());
+    } catch (error) {
+      console.error(error);
     }
   }, [dispatch]);
+
+  useEffect(() => {
+    initApp().then(() => setLoading(false));
+  }, [initApp]);
 
   //Dark theme properties
   const theme = createTheme({

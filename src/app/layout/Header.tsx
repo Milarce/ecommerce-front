@@ -15,6 +15,7 @@ import {
 import { Link, NavLink } from "react-router-dom";
 import { ShoppingCart } from "@mui/icons-material";
 import { useAppSelector } from "../context/configureStore";
+import LoginMenu from "./LoginMenu";
 
 interface Props {
   auth: boolean;
@@ -46,6 +47,7 @@ const navStyles = {
 
 const Header = (props: Props) => {
   const { basket } = useAppSelector((state) => state.basket);
+  const { user } = useAppSelector((state) => state.account);
   const itemCount = basket?.items.reduce((sum, item) => sum + item.quantity, 0); //Sums all products and their quantities
 
   return (
@@ -102,19 +104,22 @@ const Header = (props: Props) => {
               <ShoppingCart />
             </Badge>
           </IconButton>
-
-          <List sx={{ display: "flex" }}>
-            {rightLinks.map(({ title, path }) => (
-              <ListItem
-                component={NavLink} //el atributo "component" permite utilizar componentes de otras librerias, en este caso NavLink de "react-router-dom"
-                to={path}
-                sx={navStyles}
-                key={path}
-              >
-                {title.toUpperCase()}
-              </ListItem>
-            ))}
-          </List>
+          {user ? (
+            <LoginMenu />
+          ) : (
+            <List sx={{ display: "flex" }}>
+              {rightLinks.map(({ title, path }) => (
+                <ListItem
+                  component={NavLink} //el atributo "component" permite utilizar componentes de otras librerias, en este caso NavLink de "react-router-dom"
+                  to={path}
+                  sx={navStyles}
+                  key={path}
+                >
+                  {title.toUpperCase()}
+                </ListItem>
+              ))}
+            </List>
+          )}
         </Box>
       </Toolbar>
     </AppBar>
