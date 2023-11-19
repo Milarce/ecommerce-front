@@ -12,6 +12,12 @@ import AddressForm from "./AddressForm";
 import PaymentForm from "./PaymentForm";
 import Review from "./Review";
 import { FieldValues, FormProvider, useForm } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup"; //Library for validating react-hook-form
+import { validationSchema } from "./checkoutValidation";
+import agent from "../../api/agent";
+import { useAppDispatch } from "../../context/configureStore";
+import { clearBasket } from "../basket/basketSlice";
+import { LoadingButton } from "@mui/lab";
 
 const steps = ["Shipping address", "Review your order", "Payment details"];
 
@@ -29,12 +35,37 @@ function getStepContent(step: number) {
 }
 
 export default function CheckoutPage() {
-  const methods = useForm();
   const [activeStep, setActiveStep] = useState(0);
+  const [orderNumber, setOrderNumber] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const dispatch = useAppDispatch();
+  const currentValidationSchema = validationSchema[activeStep];
 
-  const handleNext = (data: FieldValues) => {
-    console.log(data);
-    setActiveStep(activeStep + 1);
+  const methods = useForm({
+    mode: "onTouched",
+    resolver: yupResolver(currentValidationSchema), //passing our validation component through the FormProvider
+  });
+
+  const handleNext = async (data: FieldValues) => {
+    const { nameOnCard, saveAddress, ...ShippingAddress } = data;
+    if (activeStep === steps.length - 1) {
+      setLoading(true);
+      try {
+        const orderNumber = await agent.Orders.create({
+          //Property names must match the OrderDto propery names (does not matter the camelCase)
+          saveAddress,
+          ShippingAddress,
+        });
+        setOrderNumber(orderNumber);
+        setActiveStep(activeStep + 1);
+        dispatch(clearBasket()); //We have to clean the basket
+      } catch (error) {
+        console.error(error);
+        setLoading(false);
+      }
+    } else {
+      setActiveStep(activeStep + 1);
+    }
   };
 
   const handleBack = () => {
@@ -65,7 +96,7 @@ export default function CheckoutPage() {
                 Thank you for your order.
               </Typography>
               <Typography variant="subtitle1">
-                Your order number is #2001539. We have emailed your order
+                Your order number is {orderNumber}. We have emailed your order
                 confirmation, and will send you an update when your order has
                 shipped.
               </Typography>
@@ -79,14 +110,15 @@ export default function CheckoutPage() {
                     Back
                   </Button>
                 )}
-                <Button
+                <LoadingButton
+                  loading={loading}
                   type="submit"
                   variant="contained"
-                  onClick={handleNext}
                   sx={{ mt: 3, ml: 1 }}
+                  disabled={!methods.formState.isValid}
                 >
                   {activeStep === steps.length - 1 ? "Place order" : "Next"}
-                </Button>
+                </LoadingButton>
               </Box>
             </form>
           )}
