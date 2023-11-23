@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import { useAppDispatch, useAppSelector } from "../context/configureStore";
 import { signOut } from "../features/account/accountSlice";
 import { clearBasket } from "../features/basket/basketSlice";
+import { Link } from "react-router-dom";
 
 const LoginMenu = () => {
   const [anchorEl, setAnchorEl] = useState(null);
@@ -29,7 +30,9 @@ const LoginMenu = () => {
         TransitionComponent={Fade}
       >
         <MenuItem onClick={handleClose}>Profile</MenuItem>
-        <MenuItem onClick={handleClose}>My account</MenuItem>
+        <MenuItem component={Link} to="/orders">
+          My orders
+        </MenuItem>
         <MenuItem
           onClick={() => {
             dispatch(signOut());

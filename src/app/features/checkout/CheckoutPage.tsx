@@ -7,7 +7,7 @@ import {
   Stepper,
   Typography,
 } from "@mui/material";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import AddressForm from "./AddressForm";
 import PaymentForm from "./PaymentForm";
 import Review from "./Review";
@@ -45,6 +45,13 @@ export default function CheckoutPage() {
     mode: "onTouched",
     resolver: yupResolver(currentValidationSchema), //passing our validation component through the FormProvider
   });
+
+  useEffect(() => {
+    agent.Account.fetchAddress().then((resp) => {
+      if (resp)
+        methods.reset({ ...methods.getValues(), ...resp, saveAddress: false }); //Reseting the form with the values from the server response
+    });
+  }, [methods]);
 
   const handleNext = async (data: FieldValues) => {
     const { nameOnCard, saveAddress, ...ShippingAddress } = data;

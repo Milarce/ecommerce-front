@@ -4,7 +4,7 @@ import AppTextInput from "../../components/AppTextInput";
 import AppCheckBox from "../../components/AppCheckBox";
 
 export default function AddressForm() {
-  const { control } = useFormContext(); //using the FormContext to store the inputs values while moving forward/backward between steps
+  const { control, formState } = useFormContext(); //using the FormContext to store the inputs values while moving forward/backward between steps
 
   //The name's value of all these input text must math with the property names of the Address model class in the API
   return (
@@ -37,8 +37,10 @@ export default function AddressForm() {
         </Grid>
         <Grid item xs={12}>
           <AppCheckBox
+            disabled={!formState.isDirty} //isDirty is true after the user modifies any of the inputs.
             name="saveAddress"
             label="Save this as the default address"
+            control={control}
           />
         </Grid>
       </Grid>
